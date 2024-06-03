@@ -1,3 +1,5 @@
+[Visit to see my portfolio [Link]](https://cwnstae.github.io/data-analytic-portfolio/).
+
 # Machine Learning - Titanic Disaster
 In this project, I will use the dataset from the "Titanic: Machine Learning from Disaster" competition on Kaggle. I will demonstrate my approach to analyzing the features and optimizing my model to predict who will survive this disaster.
 
