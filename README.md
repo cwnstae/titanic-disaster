@@ -394,7 +394,7 @@ print('Validation Accuracy:', accuracy_score(y_test, y_pred))
 
 ![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/f876b3fc-86d9-45f6-a007-47d7b5dae548)
 
-I created a binary classification model with 93% accuracy, look at the cross-entropy graph show that `val_loss` is better than `loss`. it can indicate a few possible scenarios
+I created a binary classification model with 93% accuracy to predict who will survive in the titanic disaster, look at the cross-entropy graph show that `val_loss` is better than `loss`. it can indicate a few possible scenarios
  - Dropout or Regularization Effects.
  - Data Differences.
  - Batch Normalization effect.
