@@ -3,7 +3,7 @@
 # Machine Learning - Titanic Disaster
 In this project, I will use the dataset from the "Titanic: Machine Learning from Disaster" competition on Kaggle. I will demonstrate my approach to analyzing the features and optimizing my model to predict who will survive this disaster.
 
-# The Challange ([link](https://www.kaggle.com/competitions/titanic))
+# The Challange ([Link](https://www.kaggle.com/competitions/titanic))
 The sinking of the Titanic is one of the most infamous shipwrecks in history.
 On April 15, 1912, during her maiden voyage, the widely considered “unsinkable” RMS Titanic sank after colliding with an iceberg.
 
