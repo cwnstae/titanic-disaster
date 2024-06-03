@@ -242,9 +242,10 @@ memory usage: 62.8+ KB
 ```
 
 ## 2. Dealing with Categorical Variables
-For the categorical variables, I will use a technique called "One-Hot Encoding" for the Neighborhood variable, which has no more than 10 unique values.
+For the categorical variables, I will use a technique called "ordinal_encoder" for the Neighborhood variable, which has no more than 10 unique values.
 
-![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/b77a2e38-1bf2-4020-8508-24e235383a83)
+![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/2e36c487-763f-4036-be64-624cdc259aeb)
+
 
 ```python
 categorical_cols = [cname for cname in imputed_X_train.columns if
@@ -348,3 +349,52 @@ It looks like `Sex` and `Fare` and `Pclass` is the most influence let's plot and
  - Wealthier individuals are more likely to survive.
  - Passengers in higher classes (with 1st class being the highest) are more likely to survive.
 
+## 4. Training Model
+I will use binary classification deep learning to create the model.
+```python
+input_shape = [X_train_Featured_imputed.shape[1]]
+input_shape
+model = keras.Sequential([
+        layers.BatchNormalization(input_shape=input_shape),
+        layers.Dense(16, activation='relu'),
+        layers.BatchNormalization(),
+        layers.Dropout(rate=0.5),
+        layers.Dense(32, activation='relu'),
+        layers.BatchNormalization(),
+        layers.Dropout(rate=0.5),
+        layers.Dense(1, activation='sigmoid')
+    ]
+    )
+model.compile(
+    optimizer = 'adam',
+    loss='binary_crossentropy',
+    metrics=['binary_accuracy'])
+
+early_stopping = keras.callbacks.EarlyStopping(
+    patience=100,
+    min_delta=0.001,
+    restore_best_weights=True,
+)
+history = model.fit(
+    X_train_Featured_imputed, y_train,
+    validation_data=(X_test_Featured_imputed, y_test),
+    batch_size=256,
+    epochs=4000,
+    callbacks=[early_stopping],
+)
+
+history_df = pd.DataFrame(history.history)
+history_df.loc[:, ['loss', 'val_loss']].plot(title="Cross-entropy")
+history_df.loc[:, ['binary_accuracy', 'val_binary_accuracy']].plot(title="Accuracy")
+
+y_pred = (model.predict(X_test_Featured_imputed) >= 0.5).astype(int)
+print('Validation Accuracy:', accuracy_score(y_test, y_pred))
+```
+`Validation Accuracy: 0.930622009569378`
+
+![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/f876b3fc-86d9-45f6-a007-47d7b5dae548)
+
+I created a binary classification model with 93% accuracy, look at the cross-entropy graph show that `val_loss` is better than `loss`. it can indicate a few possible scenarios
+ - Dropout or Regularization Effects.
+ - Data Differences.
+ - Batch Normalization effect.
