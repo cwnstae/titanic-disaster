@@ -336,7 +336,7 @@ plot_mi_scores(mi_scores)
 
 ![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/2c74fdcf-82ae-4007-8b58-b396244af4f4)
 
-It looks like `Sex` and `Fare` and `Pclass` is the most influence let's plot and explain
+It looks like `Sex`, `Fare` and `Pclass` are the most influence let's plot and explain
 
 ![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/cfdfa1f5-92bf-4bb3-83d3-c1fbf7e2600e)
 
