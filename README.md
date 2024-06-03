@@ -216,29 +216,29 @@ imputed_age_test.columns = X_test[["Age"]].columns
 imputed_X_train["Age"] = imputed_age_train["Age"]
 imputed_X_test["Age"] = imputed_age_test["Age"]
 
-imputed_X_train.drop('Cabin',axis='columns', inplace=True)
-imputed_X_test.drop('Cabin',axis='columns', inplace=True)
+imputed_X_train.drop(['Cabin', 'PassengerId'],axis='columns', inplace=True)
+imputed_X_test.drop(['Cabin', 'PassengerId'],axis='columns', inplace=True)
 
 imputed_X_train.info()
 ```
 ```
 <class 'pandas.core.frame.DataFrame'>
 RangeIndex: 891 entries, 0 to 890
-Data columns (total 10 columns):
- #   Column       Non-Null Count  Dtype  
----  ------       --------------  -----  
- 0   PassengerId  891 non-null    int64  
- 1   Pclass       891 non-null    int64  
- 2   Name         891 non-null    object 
- 3   Sex          891 non-null    object 
- 4   Age          891 non-null    float64
- 5   SibSp        891 non-null    int64  
- 6   Parch        891 non-null    int64  
- 7   Ticket       891 non-null    object 
- 8   Fare         891 non-null    float64
- 9   Embarked     889 non-null    object 
-dtypes: float64(2), int64(4), object(4)
-memory usage: 69.7+ KB
+Data columns (total 9 columns):
+ #   Column    Non-Null Count  Dtype  
+---  ------    --------------  -----  
+ 0   Pclass    891 non-null    int64  
+ 1   Name      891 non-null    object 
+ 2   Sex       891 non-null    object 
+ 3   Age       891 non-null    float64
+ 4   SibSp     891 non-null    int64  
+ 5   Parch     891 non-null    int64  
+ 6   Ticket    891 non-null    object 
+ 7   Fare      891 non-null    float64
+ 8   Embarked  889 non-null    object 
+dtypes: float64(2), int64(3), object(4)
+memory usage: 62.8+ KB
+
 ```
 
 ## 2. Dealing with Categorical Variables
@@ -246,6 +246,105 @@ For the categorical variables, I will use a technique called "One-Hot Encoding" 
 
 ![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/b77a2e38-1bf2-4020-8508-24e235383a83)
 
+```python
+categorical_cols = [cname for cname in imputed_X_train.columns if
+                    imputed_X_train[cname].nunique() < 10 and 
+                    imputed_X_train[cname].dtype == "object"]
+numerical_cols = [cname for cname in imputed_X_train.columns if 
+                imputed_X_train[cname].dtype in ['int64', 'float64']]
+my_cols = categorical_cols + numerical_cols
+X_train_Featured = imputed_X_train[my_cols].copy()
+X_test_Featured = imputed_X_test[my_cols].copy()
 
 
+# Apply ordinal encoder 
+ordinal_encoder = OrdinalEncoder() # Your code here
+X_train_Featured[categorical_cols] = ordinal_encoder.fit_transform(X_train_Featured[categorical_cols])
+X_test_Featured[categorical_cols] = ordinal_encoder.fit_transform(X_test_Featured[categorical_cols])
+
+
+# Imputation
+my_imputer = SimpleImputer()
+X_train_Featured_imputed = pd.DataFrame(my_imputer.fit_transform(X_train_Featured))
+X_test_Featured_imputed = pd.DataFrame(my_imputer.transform(X_test_Featured))
+
+# Imputation removed column names; put them back
+X_train_Featured_imputed.columns = X_train_Featured.columns
+X_test_Featured_imputed.columns = X_train_Featured.columns
+
+X_train_Featured_imputed.info()
+X_test_Featured_imputed.info()
+```
+
+```
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 891 entries, 0 to 890
+Data columns (total 7 columns):
+ #   Column    Non-Null Count  Dtype  
+---  ------    --------------  -----  
+ 0   Sex       891 non-null    float64
+ 1   Embarked  891 non-null    float64
+ 2   Pclass    891 non-null    float64
+ 3   Age       891 non-null    float64
+ 4   SibSp     891 non-null    float64
+ 5   Parch     891 non-null    float64
+ 6   Fare      891 non-null    float64
+dtypes: float64(7)
+memory usage: 48.9 KB
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 418 entries, 0 to 417
+Data columns (total 7 columns):
+ #   Column    Non-Null Count  Dtype  
+---  ------    --------------  -----  
+ 0   Sex       418 non-null    float64
+ 1   Embarked  418 non-null    float64
+ 2   Pclass    418 non-null    float64
+ 3   Age       418 non-null    float64
+ 4   SibSp     418 non-null    float64
+ 5   Parch     418 non-null    float64
+ 6   Fare      418 non-null    float64
+dtypes: float64(7)
+memory usage: 23.0 KB
+
+
+```
+## 3. Feature Score
+Before diving into the machine learning, let's explore how features (columns) affect survival. Who is likely to survive the disaster? I will use the Mutual Information (MI) score to assess the impact of each feature on survival.
+
+```python
+def make_mi_scores(X, y, discrete_features):
+    mi_scores = mutual_info_regression(X, y, discrete_features=discrete_features)
+    mi_scores = pd.Series(mi_scores, name="MI Scores", index=X.columns)
+    mi_scores = mi_scores.sort_values(ascending=False)
+    return mi_scores
+
+def plot_mi_scores(scores):
+    scores = scores.sort_values(ascending=True)
+    width = np.arange(len(scores))
+    ticks = list(scores.index)
+    plt.barh(width, scores)
+    plt.yticks(width, ticks)
+    plt.title("Mutual Information Scores")
+
+discrete_features = X_train_Featured_imputed.dtypes == int
+mi_scores = make_mi_scores(X_train_Featured_imputed, y_train, discrete_features)
+print (mi_scores)
+plt.figure(dpi=100, figsize=(8, 5))
+plot_mi_scores(mi_scores)
+```
+
+![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/2c74fdcf-82ae-4007-8b58-b396244af4f4)
+
+It looks like `Sex` and `Fare` and `Pclass` is the most influence let's plot and explain
+
+![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/cfdfa1f5-92bf-4bb3-83d3-c1fbf7e2600e)
+
+![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/c9c31190-a831-42be-bdb7-e26e435baf15)
+
+![image](https://github.com/cwnstae/titanic-disaster/assets/24621204/35a1213d-7516-434d-be8a-6ded7d8de0fe)
+
+- Summary
+ - Women are more likely to survive than men.
+ - Wealthier individuals are more likely to survive.
+ - Passengers in higher classes (with 1st class being the highest) are more likely to survive.
 
